@@ -208,6 +208,8 @@ const exitRoundaboutSVG = `
         let watchId = null;
         let currentRoute = null;
         let lastUpdateTime = 0;
+		let traveledLine = null;
+		let remainingLine = null;
 
         function initMap() {
             map = L.map('map', { zoomControl: false, attributionControl: false, tap: true }).setView([20, 0], 2);
@@ -433,8 +435,31 @@ let lastInstructionIdx = 0;
         showNotification("Arrival!");
         stopNavigation();
     }
+	drawRouteProgress(lastInstructionIdx)
 }
+function drawRouteProgress(idx) {
+    if (!currentRoute) return;
 
+    const coords = currentRoute.coordinates;
+
+    if (traveledLine) map.removeLayer(traveledLine);
+    if (remainingLine) map.removeLayer(remainingLine);
+
+    const traveled = coords.slice(0, idx + 1).map(p => [p.lat, p.lng]);
+    const remaining = coords.slice(idx).map(p => [p.lat, p.lng]);
+
+    traveledLine = L.polyline(traveled, {
+        color: "#9ca3af",
+        weight: 6,
+        opacity: 0.9
+    }).addTo(map);
+
+    remainingLine = L.polyline(remaining, {
+        color: "#3b82f6",
+        weight: 6,
+        opacity: 1
+    }).addTo(map);
+}
         async function searchLocation() {
     const query = document.getElementById('search-input').value;
     if (!query) return;
@@ -564,6 +589,10 @@ function showSearchResults(results) {
     currentRoute = null;
     isNavigating = false;
     isGuidanceActive = false;
+			if (traveledLine) map.removeLayer(traveledLine);
+if (remainingLine) map.removeLayer(remainingLine);
+traveledLine = null;
+remainingLine = null;
 
     document.getElementById('nav-hud').classList.add('hidden');
     document.getElementById('home-panel').classList.remove('hidden');
