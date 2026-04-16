@@ -451,14 +451,14 @@ document.getElementById('nav-hud').classList.remove('hidden');
     setLoading(true);
 
     try {
-        const photonRes = await fetch(
-            `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`
-        );
+		const photonRes = await fetch(
+    		`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lat=${userCoords?.[0] || 0}&lon=${userCoords?.[1] || 0}`
+		);
         const photonData = await photonRes.json();
 
         const nomRes = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`
-        );
+    		`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&viewbox=${userCoords?.[1]-0.5},${userCoords?.[0]+0.5},${userCoords?.[1]+0.5},${userCoords?.[0]-0.5}&bounded=1`
+		);
         const nomData = await nomRes.json();
 
         setLoading(false);
