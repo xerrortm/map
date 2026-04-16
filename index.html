@@ -86,8 +86,13 @@
             </button>
         </div>
     </div>
-
-<div id="home-panel" class="absolute bottom-24 left-4 right-4 z-[1000] flex justify-center hud-transition">
+    <!-- Floating Buttons -->
+    <div class="absolute bottom-8 right-4 z-[1000] flex flex-col gap-3 transition-transform duration-500" id="map-controls">
+        <button id="recenter-btn" class="p-4 bg-white rounded-full shadow-lg text-blue-600 hover:bg-gray-50 transition border border-gray-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+        </button>
+    </div>
+	<div id="home-panel" class="absolute bottom-4 left-4 right-4 z-[1000] flex flex-col items-center gap-3 hud-transition">
 
     <div class="w-full max-w-md glass-panel rounded-3xl shadow-2xl p-5">
 
@@ -172,13 +177,6 @@
     </div>
 
     <div id="map"></div>
-
-    <!-- Floating Buttons -->
-    <div class="absolute bottom-8 right-4 z-[1000] flex flex-col gap-3 transition-transform duration-500" id="map-controls">
-        <button id="recenter-btn" class="p-4 bg-white rounded-full shadow-lg text-blue-600 hover:bg-gray-50 transition border border-gray-100">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
-        </button>
-    </div>
 
     <div id="notification" class="fixed top-24 left-1/2 -translate-x-1/2 z-[2000] px-6 py-3 rounded-full bg-gray-900 text-white text-xs font-bold shadow-2xl transition-all duration-300 transform -translate-y-20 opacity-0 pointer-events-none text-center"></div>
 
