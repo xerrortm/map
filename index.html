@@ -1015,9 +1015,7 @@ function goBackHome() {
 }
 document.getElementById('save-location-btn')
     .addEventListener('click', saveCurrentLocation);
-window.addEventListener('load', () => {
-    loadSavedLocations();
-
+document.addEventListener('click', () => {
     const waitForGPS = setInterval(() => {
         if (userCoords) {
             clearInterval(waitForGPS);
