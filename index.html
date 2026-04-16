@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         #map { height: 100vh; width: 100%; z-index: 1; background: #f0f0f0; cursor: crosshair; }
         .leaflet-routing-container { display: none !important; }
@@ -317,7 +318,167 @@ function updateUserLocation(position) {
             } catch (e) {}
             return [lat, lng];
         }
+async function getNearbySuggestions() {
+    if (!userCoords) return [];
 
+    const [lat, lng] = userCoords;
+
+    const query = `
+[out:json][timeout:25];
+(
+  node["amenity"](around:1200,${lat},${lng});
+  node["shop"](around:1200,${lat},${lng});
+  node["tourism"](around:1200,${lat},${lng});
+  node["leisure"](around:1200,${lat},${lng});
+  node["healthcare"](around:1200,${lat},${lng});
+  node["office"](around:1200,${lat},${lng});
+);
+out center 15;
+`;
+
+    const res = await fetch("https://overpass-api.de/api/interpreter", {
+        method: "POST",
+        body: query
+    });
+
+    const data = await res.json();
+
+    return (data.elements || [])
+        .filter(e => e.tags?.name && (e.lat || e.lon))
+        .slice(0, 10)
+        .map(e => {
+            const tags = e.tags || {};
+
+            const type =
+                tags.amenity ||
+                tags.shop ||
+                tags.tourism ||
+                tags.leisure ||
+                tags.healthcare ||
+                tags.office ||
+                "place";
+
+            return {
+                name: tags.name,
+                type: type,
+                lat: e.lat,
+                lng: e.lon
+            };
+        });
+}
+		function normalizePOIType(type) {
+    const t = (type || "").toLowerCase();
+
+    const map = {
+        restaurant: "restaurant",
+        fast_food: "fast_food",
+        cafe: "cafe",
+        school: "school",
+        university: "school",
+        hospital: "hospital",
+        pharmacy: "hospital",
+        clinic: "hospital",
+        bank: "bank",
+        atm: "bank",
+        supermarket: "shop",
+        convenience: "shop",
+        clothes: "shop",
+        mall: "shop",
+        fuel: "fuel",
+        parking: "parking",
+        hotel: "hotel",
+        hostel: "hotel",
+        attraction: "tourism",
+        museum: "tourism",
+        zoo: "tourism"
+    };
+
+    return map[t] || t;
+}
+		function getPOIIcon(type) {
+    const t = normalizePOIType(type);
+
+    if (t === "restaurant" || t === "fast_food")
+        return "fa-utensils";
+
+    if (t === "cafe")
+        return "fa-mug-hot";
+
+    if (t === "school")
+        return "fa-school";
+
+    if (t === "hospital")
+        return "fa-hospital";
+
+    if (t === "bank")
+        return "fa-building-columns";
+
+    if (t === "shop")
+        return "fa-cart-shopping";
+
+    if (t === "fuel")
+        return "fa-gas-pump";
+
+    if (t === "hotel")
+        return "fa-bed";
+
+    if (t === "tourism")
+        return "fa-camera";
+
+    return "fa-location-dot";
+}
+		async function loadSuggestions() {
+    const places = await getNearbySuggestions();
+    if (!places.length) return;
+
+    const top = places.slice(0, 3);
+
+    const container = document.getElementById("saved-locations-container");
+    if (!container) return;
+
+    // remove old suggestions if any
+    document.querySelectorAll(".suggestion-card").forEach(el => el.remove());
+
+    top.forEach(p => {
+        const icon = getPOIIcon(p.type);
+        const typeLabel = normalizePOIType(p.type);
+
+        const card = document.createElement("div");
+        card.className = `
+            suggestion-card glass-panel rounded-2xl px-4 py-3
+            flex items-center justify-between gap-3
+            cursor-pointer hover:bg-gray-100 transition mb-2
+        `;
+
+        card.innerHTML = `
+            <div class="flex items-center gap-3 overflow-hidden">
+                <div class="text-blue-600 text-lg w-8 text-center">
+                    <i class="fa-solid ${icon}"></i>
+                </div>
+
+                <div class="overflow-hidden">
+                    <div class="font-bold text-gray-900 truncate">
+                        ${p.name}
+                    </div>
+                    <div class="text-xs text-gray-500 capitalize">
+                        ${typeLabel.replaceAll("_", " ")}
+                    </div>
+                </div>
+            </div>
+
+            <button class="text-xs font-bold text-blue-600">
+                Go
+            </button>
+        `;
+
+        card.onclick = () => {
+            startNavigation([p.lat, p.lng]);
+        };
+
+        container.parentElement.insertBefore(card, container);
+    });
+}
+		
         async function startNavigation(rawDest) {
             if (!userCoords) return showNotification("Locating...");
             setLoading(true);
@@ -854,7 +1015,16 @@ function goBackHome() {
 }
 document.getElementById('save-location-btn')
     .addEventListener('click', saveCurrentLocation);
+window.addEventListener('load', () => {
+    loadSavedLocations();
 
+    const waitForGPS = setInterval(() => {
+        if (userCoords) {
+            clearInterval(waitForGPS);
+            loadSuggestions();
+        }
+    }, 1000);
+});
 window.addEventListener('load', loadSavedLocations);
         window.onload = initMap;
     </script>
