@@ -260,13 +260,13 @@ const exitRoundaboutSVG = `
         }
 
         function requestLocationAccess() {
-            followMode=true;
             document.getElementById('location-prompt').classList.add('opacity-0');
             setTimeout(() => document.getElementById('location-prompt').classList.add('hidden'), 500);
             watchId = navigator.geolocation.watchPosition(updateUserLocation, handleLocationError, {
                 enableHighAccuracy: true, maximumAge: 0, timeout: 5000
             });
             followMode=false;
+			waitForGPSAndLoadSuggestions();
         }
 
 function updateUserLocation(position) {
@@ -1035,7 +1035,6 @@ function waitForGPSAndLoadSuggestions() {
 window.addEventListener('load', () => {
     initMap();
     loadSavedLocations();
-    waitForGPSAndLoadSuggestions();
 });
 
 document.getElementById('save-location-btn')
