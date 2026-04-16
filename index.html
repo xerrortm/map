@@ -1013,18 +1013,23 @@ function goBackHome() {
 
     if (userCoords) map.flyTo(userCoords, 16);
 }
-document.getElementById('save-location-btn')
-    .addEventListener('click', saveCurrentLocation);
-document.addEventListener('click', () => {
+function waitForGPSAndLoadSuggestions() {
     const waitForGPS = setInterval(() => {
         if (userCoords) {
             clearInterval(waitForGPS);
             loadSuggestions();
         }
     }, 1000);
+}
+
+window.addEventListener('load', () => {
+    initMap();
+    loadSavedLocations();
+    waitForGPSAndLoadSuggestions();
 });
-window.addEventListener('load', loadSavedLocations);
-        window.onload = initMap;
+
+document.getElementById('save-location-btn')
+    .addEventListener('click', saveCurrentLocation);
     </script>
 </body>
 </html>
