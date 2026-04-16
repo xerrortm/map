@@ -539,7 +539,7 @@ function showInstruction(idx) {
     if (!currentRoute) return;
     idx = Math.max(0, Math.min(idx, currentRoute.instructions.length - 1));
     currentInstrIdx = idx;
-    const instr = currentRoute.instructions[idx];
+    const instr = currentRoute.legs[0].steps[idx];
     document.getElementById('next-instruction').innerText = instr.text || "Proceed to route";
 
     // Update maneuver icon
