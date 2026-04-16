@@ -403,6 +403,7 @@ out center 25;
         museum: "tourism",
         zoo: "tourism",
 		sports: "sports",
+		park: "park",
     };
 
     return map[t] || t;
@@ -432,8 +433,10 @@ out center 25;
         return "fa-wine-glass";
 	if (t === "sports")
         return "fa-running";
+	if (t === "park")
+		return "fa-tree";
 
-    return "fa-building-columns";
+    return "fa-building";
 }
 		async function loadSuggestions() {
     const places = await getNearbySuggestions();
