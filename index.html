@@ -489,6 +489,15 @@ document.getElementById('nav-hud').classList.remove('hidden');
             showNotification("No results found");
             return;
         }
+		results.forEach(r => {
+    if (userCoords) {
+        r.distance = getDistanceMeters(userCoords[0], userCoords[1], r.lat, r.lng);
+    } else {
+        r.distance = Infinity;
+    }
+});
+
+results.sort((a, b) => a.distance - b.distance);
 
         showSearchResults(results);
 
@@ -501,16 +510,33 @@ function showSearchResults(results) {
     let existing = document.getElementById("search-results");
     if (existing) existing.remove();
 
+    const formatDistance = (m) => {
+        if (m === Infinity) return "";
+        return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(1)} km`;
+    };
+
     const box = document.createElement("div");
     box.id = "search-results";
     box.className =
         "absolute bottom-40 left-1/2 -translate-x-1/2 w-[92%] max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden z-[2000]";
 
     box.innerHTML = results.map(r => `
-        <div class="p-3 border-b hover:bg-gray-100 cursor-pointer"
+        <div class="p-3 border-b hover:bg-gray-100 cursor-pointer flex justify-between items-center"
             onclick="selectPlace(${r.lat}, ${r.lng})">
-            <div class="font-bold text-gray-900">${r.name}</div>
-            <div class="text-xs text-gray-500">${r.subtitle}</div>
+
+            <div class="overflow-hidden pr-2">
+                <div class="font-bold text-gray-900 truncate">
+                    ${r.name}
+                </div>
+                <div class="text-xs text-gray-500 truncate">
+                    ${r.subtitle || ""}
+                </div>
+            </div>
+
+            <div class="text-xs font-bold text-blue-600 shrink-0">
+                ${formatDistance(r.distance)}
+            </div>
+
         </div>
     `).join("");
 
@@ -521,6 +547,21 @@ function showSearchResults(results) {
     if (box) box.remove();
 
     startNavigation([lat, lng]);
+}
+		function getDistanceMeters(aLat, aLng, bLat, bLng) {
+    const R = 6371e3;
+    const toRad = x => x * Math.PI / 180;
+
+    const dLat = toRad(bLat - aLat);
+    const dLng = toRad(bLng - aLng);
+
+    const A =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(aLat)) *
+        Math.cos(toRad(bLat)) *
+        Math.sin(dLng / 2) ** 2;
+
+    return R * 2 * Math.atan2(Math.sqrt(A), Math.sqrt(1 - A));
 }
 		
         function stopNavigation() {
