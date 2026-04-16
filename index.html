@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+	<script src="https://unpkg.com/leaflet-rotate@0.1.4/dist/leaflet-rotate-src.js"></script>
     <style>
         #map { height: 100vh; width: 100%; z-index: 1; background: #f0f0f0; cursor: crosshair; }
         .leaflet-routing-container { display: none !important; }
@@ -124,7 +125,7 @@
     </div>
 </div>
     <!-- Dynamic Navigation HUD -->
-    <div id="nav-hud" class="hidden absolute bottom-24 left-4 right-4 z-[1000] flex flex-col items-center pointer-events-none hud-transition">
+    <div id="nav-hud" class="hidden absolute bottom-4 left-4 right-4 z-[1000] flex flex-col items-center pointer-events-none hud-transition">
         <div id="hud-panel" class="w-full glass-panel rounded-3xl shadow-2xl p-5 pointer-events-auto hud-transition">
 
             <!-- Summary Mode (Before Start) -->
@@ -210,20 +211,33 @@ const exitRoundaboutSVG = `
         let lastUpdateTime = 0;
 
         function initMap() {
-            map = L.map('map', { zoomControl: false, attributionControl: false, tap: true }).setView([20, 0], 2);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(map);
+    		map = L.map('map', {
+        		zoomControl: false,
+        		attributionControl: false,
+        		tap: true,
+        		rotate: true,
+        		touchRotate: true,
+        		bearing: 0
+    		}).setView([20, 0], 2);
 
-            map.on('click', (e) => !isGuidanceActive && startNavigation([e.latlng.lat, e.latlng.lng]));
+    		L.tileLayer(
+        		'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+        		{ maxZoom: 20 }
+    		).addTo(map);
 
-            if (navigator.permissions) {
-                navigator.permissions.query({ name: 'geolocation' }).then(result => {
-                    if (result.state === 'granted') requestLocationAccess();
-                    else document.getElementById('location-prompt').classList.remove('hidden');
-                });
-            } else {
-                document.getElementById('location-prompt').classList.remove('hidden');
-            }
-        }
+    		map.on('click', (e) => {
+        		if (!isGuidanceActive) startNavigation([e.latlng.lat, e.latlng.lng]);
+    		});
+
+    		if (navigator.permissions) {
+        		navigator.permissions.query({ name: 'geolocation' }).then(result => {
+            		if (result.state === 'granted') requestLocationAccess();
+            		else document.getElementById('location-prompt').classList.remove('hidden');
+        		});
+    		} else {
+        		document.getElementById('location-prompt').classList.remove('hidden');
+    		}
+		}
 
         function requestLocationAccess() {
             followMode=true;
@@ -250,13 +264,28 @@ function updateUserLocation(position) {
         userMarker.setLatLng(userCoords);
     }
 
-    // --- FOLLOW LOGIC ---
     if (followMode) {
-        map.setView(userCoords, map.getZoom(), { animate: true }); // keep map following
+        map.setView(userCoords, 18, {
+            animate: true,
+            duration: 0.5
+        });
+
+        if (isGuidanceActive && currentRoute) {
+            const dest = currentRoute.coordinates[currentRoute.coordinates.length - 1];
+
+            const bearing = getBearing(userCoords, dest);
+
+            if (map.setBearing) {
+                map.setBearing(bearing);
+            }
+
+            map.panBy([0, -80]);
+        }
     }
 
-    // Update HUD/instructions even if not following
-    if (isGuidanceActive && currentRoute) updateGuidanceUI();
+    if (isGuidanceActive && currentRoute) {
+        updateGuidanceUI();
+    }
 }
         async function getRoadDetails(lat, lng) {
             try {
@@ -396,13 +425,10 @@ document.getElementById('nav-hud').classList.remove('hidden');
     const instr = currentRoute.instructions[closestIdx];
     let nextText = instr.text || "Proceed to route";
 
-    // Replace "Head" with "Go" for cleaner text
     nextText = nextText.replace(/^Head/i, "Go");
 
-    // Update HUD
     document.getElementById('next-instruction').innerText = nextText;
 
-    // Update maneuver icon
     const svg = document.getElementById('maneuver-svg');
     const lower = nextText.toLowerCase();
     if (lower.includes('left')) svg.innerHTML = '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>';
@@ -414,25 +440,21 @@ document.getElementById('nav-hud').classList.remove('hidden');
     }
     else svg.innerHTML = '<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>';
 
-    // Distance to next turn
     document.getElementById('distance-info').innerText =
         minDistance < 40 ? `NOW` : `${Math.round(minDistance)}m`;
 
-    // Total distance to destination
     const dest = currentRoute.coordinates[currentRoute.coordinates.length - 1];
     const distTotal = L.latLng(userCoords).distanceTo(L.latLng(dest.lat, dest.lng));
 
-    // Rough ETA
     document.getElementById('duration-info').innerText = `${Math.ceil(distTotal / 150)}m`;
 
-    // --- Voice guidance ---
     if (nextText !== lastSpokenInstruction) {
         lastSpokenInstruction = nextText;
         if ('speechSynthesis' in window) {
             const utter = new SpeechSynthesisUtterance(nextText);
             utter.lang = 'en-US';
             utter.rate = 1;
-            speechSynthesis.cancel(); // stop any previous speech
+            speechSynthesis.cancel();
             speechSynthesis.speak(utter);
         }
     }
@@ -442,6 +464,22 @@ document.getElementById('nav-hud').classList.remove('hidden');
         showNotification("Arrival!");
         stopNavigation();
     }
+}
+		function getBearing(start, end) {
+    const toRad = d => d * Math.PI / 180;
+
+    const lat1 = toRad(start[0]);
+    const lon1 = toRad(start[1]);
+    const lat2 = toRad(end.lat);
+    const lon2 = toRad(end.lng);
+
+    const y = Math.sin(lon2 - lon1) * Math.cos(lat2);
+    const x =
+        Math.cos(lat1) * Math.sin(lat2) -
+        Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+
+    let brng = Math.atan2(y, x) * 180 / Math.PI;
+    return (brng + 360) % 360;
 }
 
         async function searchLocation() {
@@ -514,10 +552,10 @@ function showInstruction(idx) {
     const lower = instr.text.toLowerCase();
     if (lower.includes('left')) svg.innerHTML = '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>';
     else if (lower.includes('right')) svg.innerHTML = '<path d="m12 5 7 7-7 7"/><path d="M5 12h14"/>';
-	 else if (lower.includes('circle')) {
-        if (lower.includes('enter')) svg.innerHTML = enterRoundaboutSVG;
-        else svg.innerHTML = exitRoundaboutSVG;
-    }
+	else if (lower.includes('circle') || lower.includes('roundabout')) {
+    	if (lower.includes('enter')) svg.innerHTML = enterRoundaboutSVG;
+    	else svg.innerHTML = exitRoundaboutSVG;
+	}
     else svg.innerHTML = '<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>';
 }
 
