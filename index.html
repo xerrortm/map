@@ -445,22 +445,84 @@ document.getElementById('nav-hud').classList.remove('hidden');
 }
 
         async function searchLocation() {
-            const query = document.getElementById('search-input').value;
-            if (!query) return;
-            setLoading(true);
-            try {
-                const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1`);
-                const data = await res.json();
-                if (data.features?.length) {
-                    const [lon, lat] = data.features[0].geometry.coordinates;
-                    startNavigation([lat, lon]);
-                } else {
-                    showNotification("Place not found.");
-                    setLoading(false);
-                }
-            } catch (e) { setLoading(false); }
+    const query = document.getElementById('search-input').value;
+    if (!query) return;
+
+    setLoading(true);
+
+    try {
+        const photonRes = await fetch(
+            `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`
+        );
+        const photonData = await photonRes.json();
+
+        const nomRes = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`
+        );
+        const nomData = await nomRes.json();
+
+        setLoading(false);
+
+        const results = [];
+
+        if (photonData.features) {
+            photonData.features.forEach(f => {
+                results.push({
+                    name: f.properties.name || f.properties.street || f.properties.city || "Unknown",
+                    subtitle: [f.properties.city, f.properties.country].filter(Boolean).join(", "),
+                    lat: f.geometry.coordinates[1],
+                    lng: f.geometry.coordinates[0]
+                });
+            });
         }
 
+        nomData.forEach(n => {
+            results.push({
+                name: n.display_name.split(",")[0],
+                subtitle: n.display_name,
+                lat: parseFloat(n.lat),
+                lng: parseFloat(n.lon)
+            });
+        });
+
+        if (!results.length) {
+            showNotification("No results found");
+            return;
+        }
+
+        showSearchResults(results);
+
+    } catch (e) {
+        setLoading(false);
+        showNotification("Search error");
+    }
+}
+function showSearchResults(results) {
+    let existing = document.getElementById("search-results");
+    if (existing) existing.remove();
+
+    const box = document.createElement("div");
+    box.id = "search-results";
+    box.className =
+        "absolute bottom-40 left-1/2 -translate-x-1/2 w-[92%] max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden z-[2000]";
+
+    box.innerHTML = results.map(r => `
+        <div class="p-3 border-b hover:bg-gray-100 cursor-pointer"
+            onclick="selectPlace(${r.lat}, ${r.lng})">
+            <div class="font-bold text-gray-900">${r.name}</div>
+            <div class="text-xs text-gray-500">${r.subtitle}</div>
+        </div>
+    `).join("");
+
+    document.body.appendChild(box);
+}
+		function selectPlace(lat, lng) {
+    const box = document.getElementById("search-results");
+    if (box) box.remove();
+
+    startNavigation([lat, lng]);
+}
+		
         function stopNavigation() {
     exitGuidanceLayout();
 
@@ -514,7 +576,7 @@ function showInstruction(idx) {
     const lower = instr.text.toLowerCase();
     if (lower.includes('left')) svg.innerHTML = '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>';
     else if (lower.includes('right')) svg.innerHTML = '<path d="m12 5 7 7-7 7"/><path d="M5 12h14"/>';
-	 else if (lower.includes('circle')) {
+	 else if (lower.includes('circle') || lower.includes('roundabout')) {
         if (lower.includes('enter')) svg.innerHTML = enterRoundaboutSVG;
         else svg.innerHTML = exitRoundaboutSVG;
     }
