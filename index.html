@@ -376,68 +376,59 @@ document.getElementById('nav-hud').classList.remove('hidden');
             document.getElementById('mode-summary').classList.remove('hidden');
             document.getElementById('action-buttons').classList.remove('hidden');
         }
-
+let lastInstructionIdx = 0;
         function updateGuidanceUI() {
     if (!currentRoute || !userCoords) return;
 
-    // Find the closest instruction based on user position
-    let closestIdx = 0;
+    const instructions = currentRoute.instructions;
+
+    let closestIdx = lastInstructionIdx;
     let minDistance = Infinity;
 
-    currentRoute.instructions.forEach((instr, idx) => {
+    for (let i = lastInstructionIdx; i < instructions.length; i++) {
+        const instr = instructions[i];
         const point = currentRoute.coordinates[instr.index];
-        const d = L.latLng(userCoords).distanceTo(L.latLng(point.lat, point.lng));
+
+        const d = L.latLng(userCoords)
+            .distanceTo(L.latLng(point.lat, point.lng));
+
         if (d < minDistance) {
             minDistance = d;
-            closestIdx = idx;
+            closestIdx = i;
         }
-    });
+    }
+    if (closestIdx > lastInstructionIdx && minDistance < 40) {
+        lastInstructionIdx = closestIdx;
+    }
 
-    const instr = currentRoute.instructions[closestIdx];
-    let nextText = instr.text || "Proceed to route";
+    const instr = instructions[lastInstructionIdx];
+    let nextText = instr.text || "Proceed";
 
-    // Replace "Head" with "Go" for cleaner text
-    nextText = nextText.replace(/^Head/i, "Go");
-
-    // Update HUD
     document.getElementById('next-instruction').innerText = nextText;
 
-    // Update maneuver icon
     const svg = document.getElementById('maneuver-svg');
     const lower = nextText.toLowerCase();
-    if (lower.includes('left')) svg.innerHTML = '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>';
-    else if (lower.includes('right')) svg.innerHTML = '<path d="m12 5 7 7-7 7"/><path d="M5 12h14"/>';
 
-	 else if (lower.includes('circle')) {
-        if (lower.includes('enter')) svg.innerHTML = enterRoundaboutSVG;
-        else svg.innerHTML = exitRoundaboutSVG;
+    if (lower.includes('left')) {
+        svg.innerHTML = '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>';
+    } else if (lower.includes('right')) {
+        svg.innerHTML = '<path d="m12 5 7 7-7 7"/><path d="M5 12h14"/>';
+    } else if (lower.includes('roundabout') || lower.includes('circle')) {
+        if (lower.includes('exit')) {
+            svg.innerHTML = exitRoundaboutSVG;
+        } else {
+            svg.innerHTML = enterRoundaboutSVG;
+        }
+    } else {
+        svg.innerHTML = '<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>';
     }
-    else svg.innerHTML = '<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>';
 
-    // Distance to next turn
     document.getElementById('distance-info').innerText =
-        minDistance < 40 ? `NOW` : `${Math.round(minDistance)}m`;
+        minDistance < 40 ? "NOW" : `${Math.round(minDistance)}m`;
 
-    // Total distance to destination
     const dest = currentRoute.coordinates[currentRoute.coordinates.length - 1];
     const distTotal = L.latLng(userCoords).distanceTo(L.latLng(dest.lat, dest.lng));
 
-    // Rough ETA
-    document.getElementById('duration-info').innerText = `${Math.ceil(distTotal / 150)}m`;
-
-    // --- Voice guidance ---
-    if (nextText !== lastSpokenInstruction) {
-        lastSpokenInstruction = nextText;
-        if ('speechSynthesis' in window) {
-            const utter = new SpeechSynthesisUtterance(nextText);
-            utter.lang = 'en-US';
-            utter.rate = 1;
-            speechSynthesis.cancel(); // stop any previous speech
-            speechSynthesis.speak(utter);
-        }
-    }
-
-    // Arrival check
     if (distTotal < 20) {
         showNotification("Arrival!");
         stopNavigation();
