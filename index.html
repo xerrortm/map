@@ -184,6 +184,32 @@
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
     <script>
+const slightLeftSVG = `
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+style="transform: rotate(-45deg); transform-origin: center;">
+  <path d="m12 19-7-7 7-7"/>
+  <path d="M19 12H5"/>
+</svg>`;
+
+const slightRightSVG = `
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+style="transform: rotate(45deg); transform-origin: center;">
+  <path d="m12 5 7 7-7 7"/>
+  <path d="M5 12h14"/>
+</svg>`;
+
+const mergeSVG = `
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- two lines merging -->
+  <path d="M6 20V10"/>
+  <path d="M18 20V10"/>
+  <path d="M12 10V4"/>
+  <!-- upward arrow -->
+  <polyline points="9,7 12,4 15,7"/>
+</svg>`;
 const enterRoundaboutSVG = `
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <path d="M12 20 V12"/> <!-- vertical line up -->
@@ -409,21 +435,29 @@ let lastInstructionIdx = 0;
     document.getElementById('next-instruction').innerText = nextText;
 
     const svg = document.getElementById('maneuver-svg');
-    const lower = nextText.toLowerCase();
-
-    if (lower.includes('left')) {
-        svg.innerHTML = '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>';
-    } else if (lower.includes('right')) {
-        svg.innerHTML = '<path d="m12 5 7 7-7 7"/><path d="M5 12h14"/>';
-    } else if (lower.includes('roundabout') || lower.includes('circle')) {
-        if (lower.includes('exit')) {
-            svg.innerHTML = exitRoundaboutSVG;
-        } else {
-            svg.innerHTML = enterRoundaboutSVG;
-        }
-    } else {
-        svg.innerHTML = '<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>';
-    }
+    const lower = instr.text.toLowerCase();
+			
+if (lower.includes('roundabout') || lower.includes('circle')) {
+    svg.innerHTML = lower.includes('exit') ? exitRoundaboutSVG : enterRoundaboutSVG;
+}
+else if (lower.includes('slight left') || lower.includes('keep left')) {
+    svg.innerHTML = slightLeftSVG;
+}
+else if (lower.includes('slight right') || lower.includes('keep right')) {
+    svg.innerHTML = slightRightSVG;
+}
+else if (lower.includes('merge')) {
+    svg.innerHTML = mergeSVG;
+}
+else if (lower.includes('left')) {
+    svg.innerHTML = '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>';
+}
+else if (lower.includes('right')) {
+    svg.innerHTML = '<path d="m12 5 7 7-7 7"/><path d="M5 12h14"/>';
+}
+else {
+    svg.innerHTML = '<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>';
+}
 
     document.getElementById('distance-info').innerText =
         minDistance < 40 ? "NOW" : `${Math.round(minDistance)}m`;
@@ -635,13 +669,28 @@ function showInstruction(idx) {
     // Update maneuver icon
     const svg = document.getElementById('maneuver-svg');
     const lower = instr.text.toLowerCase();
-    if (lower.includes('left')) svg.innerHTML = '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>';
-    else if (lower.includes('right')) svg.innerHTML = '<path d="m12 5 7 7-7 7"/><path d="M5 12h14"/>';
-	 else if (lower.includes('circle') || lower.includes('roundabout')) {
-        if (lower.includes('enter')) svg.innerHTML = enterRoundaboutSVG;
-        else svg.innerHTML = exitRoundaboutSVG;
-    }
-    else svg.innerHTML = '<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>';
+	
+    if (lower.includes('roundabout') || lower.includes('circle')) {
+    svg.innerHTML = lower.includes('exit') ? exitRoundaboutSVG : enterRoundaboutSVG;
+}
+else if (lower.includes('slight left') || lower.includes('keep left')) {
+    svg.innerHTML = slightLeftSVG;
+}
+else if (lower.includes('slight right') || lower.includes('keep right')) {
+    svg.innerHTML = slightRightSVG;
+}
+else if (lower.includes('merge')) {
+    svg.innerHTML = mergeSVG;
+}
+else if (lower.includes('left')) {
+    svg.innerHTML = '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>';
+}
+else if (lower.includes('right')) {
+    svg.innerHTML = '<path d="m12 5 7 7-7 7"/><path d="M5 12h14"/>';
+}
+else {
+    svg.innerHTML = '<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>';
+}
 }
 
 // Touch events for swipe
