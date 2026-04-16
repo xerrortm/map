@@ -371,6 +371,8 @@ out center 15;
 
     const map = {
         restaurant: "restaurant",
+		bar: "bar",
+		food_court: "restaurant",
         fast_food: "fast_food",
         cafe: "cafe",
         school: "school",
@@ -424,6 +426,8 @@ out center 15;
 
     if (t === "tourism")
         return "fa-camera";
+	if (t === "bar")
+        return "fa-wine-glass";
 
     return "fa-location-dot";
 }
@@ -436,7 +440,6 @@ out center 15;
     const container = document.getElementById("saved-locations-container");
     if (!container) return;
 
-    // remove old suggestions if any
     document.querySelectorAll(".suggestion-card").forEach(el => el.remove());
 
     top.forEach(p => {
