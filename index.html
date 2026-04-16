@@ -323,17 +323,22 @@ async function getNearbySuggestions() {
 
     const [lat, lng] = userCoords;
 
+    const jitter = () => (Math.random() - 0.5) * 0.01;
+
+    const latJ = lat + jitter();
+    const lngJ = lng + jitter();
+
     const query = `
 [out:json][timeout:25];
 (
-  node["amenity"](around:1200,${lat},${lng});
-  node["shop"](around:1200,${lat},${lng});
-  node["tourism"](around:1200,${lat},${lng});
-  node["leisure"](around:1200,${lat},${lng});
-  node["healthcare"](around:1200,${lat},${lng});
-  node["office"](around:1200,${lat},${lng});
+  node["amenity"](around:1800,${latJ},${lngJ});
+  node["shop"](around:1800,${latJ},${lngJ});
+  node["tourism"](around:1800,${latJ},${lngJ});
+  node["leisure"](around:1800,${latJ},${lngJ});
+  node["healthcare"](around:1800,${latJ},${lngJ});
+  node["office"](around:1800,${latJ},${lngJ});
 );
-out center 15;
+out center 25;
 `;
 
     const res = await fetch("https://overpass-api.de/api/interpreter", {
@@ -343,9 +348,8 @@ out center 15;
 
     const data = await res.json();
 
-    return (data.elements || [])
+    let results = (data.elements || [])
         .filter(e => e.tags?.name && (e.lat || e.lon))
-        .slice(0, 10)
         .map(e => {
             const tags = e.tags || {};
 
@@ -360,11 +364,16 @@ out center 15;
 
             return {
                 name: tags.name,
-                type: type,
+                type,
                 lat: e.lat,
                 lng: e.lon
             };
         });
+
+    results = results
+        .sort(() => Math.random() - 0.5);
+
+    return results.slice(0, 12);
 }
 		function normalizePOIType(type) {
     const t = (type || "").toLowerCase();
@@ -372,7 +381,7 @@ out center 15;
     const map = {
         restaurant: "restaurant",
 		bar: "bar",
-		food_court: "restaurant",
+		food_court: "food_court",
         fast_food: "fast_food",
         cafe: "cafe",
         school: "school",
@@ -400,7 +409,7 @@ out center 15;
 		function getPOIIcon(type) {
     const t = normalizePOIType(type);
 
-    if (t === "restaurant" || t === "fast_food")
+    if (t === "restaurant" || t === "fast_food" || t === "food_court")
         return "fa-utensils";
 
     if (t === "cafe")
