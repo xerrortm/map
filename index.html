@@ -69,13 +69,6 @@
         #hud-panel {
            max-width: 600px;
         }
-		#instruction-icon-container svg {
-   		 	width: 32px;
-    		height: 32px;
-    		display: block;
-    		margin: auto;
-    		transform-origin: center;
-		}
     </style>
 </head>
 <body class="bg-gray-100 overflow-hidden font-sans">
@@ -196,30 +189,31 @@ const slightLeftSVG = `
 viewBox="0 0 24 24" width="32" height="32"
 fill="none" stroke="currentColor"
 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M12 20 V9"/>
-  <path d="M12 9 Q12 7 10 6"/>
-  <path d="M10 6 L11.5 6.5 L10.5 7.5"/>
+  <path d="M12 20 V10"/>
+  <path d="M12 10 Q12 8 10 7"/>
+  <path d="M10 7 V3"/>
+  <path d="M10 3 L11.5 3.5 L10.5 4.5"/>
 </svg>`;
 const slightRightSVG = `
 <svg xmlns="http://www.w3.org/2000/svg"
 viewBox="0 0 24 24" width="32" height="32"
 fill="none" stroke="currentColor"
 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M12 20 V9"/>
-  <path d="M12 9 Q12 7 14 6"/>
-  <path d="M14 6 L12.5 6.5 L13.5 7.5"/>
+  <path d="M12 20 V10"/>
+  <path d="M12 10 Q12 8 14 7"/>
+  <path d="M14 7 V3"/>
+  <path d="M14 3 L12.5 3.5 L13.5 4.5"/>
 </svg>`;
 const mergeSVG = `
-<svg xmlns="http://www.w3.org/2000/svg"
-viewBox="0 0 24 24" width="32" height="32"
-fill="none" stroke="currentColor"
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+viewBox="0 0 24 24" fill="none" stroke="currentColor"
 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M9 20 V12"/>
-  <path d="M15 20 V12"/>
-  <path d="M9 12 Q12 8 12 5"/>
-  <path d="M15 12 Q12 8 12 5"/>
-  <path d="M12 5 L12 3"/>
-  <path d="M12 3 L10.5 4.5 M12 3 L13.5 4.5"/>
+  <path d="M7 20V12"/>
+  <path d="M17 20V12"/>
+  <path d="M7 12 C7 8, 12 8, 12 4"/>
+  <path d="M17 12 C17 8, 12 8, 12 4"/>
+  <path d="M12 4 L12 2"/>
+  <path d="M12 2 L10 4 M12 2 L14 4"/>
 </svg>`;
 const enterRoundaboutSVG = `
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
