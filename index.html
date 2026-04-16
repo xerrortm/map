@@ -185,33 +185,34 @@
 
     <script>
 const slightLeftSVG = `
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
-viewBox="0 0 24 24" fill="none" stroke="currentColor"
+<svg xmlns="http://www.w3.org/2000/svg"
+viewBox="0 0 24 24" width="32" height="32"
+fill="none" stroke="currentColor"
 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M12 20 V10"/>
-  <path d="M12 10 Q10 8 8 7"/>
-  <path d="M8 7 L9.5 7.5 L8.5 8.5"/>
+  <path d="M12 20 V9"/>
+  <path d="M12 9 Q12 7 10 6"/>
+  <path d="M10 6 L11.5 6.5 L10.5 7.5"/>
 </svg>`;
-
 const slightRightSVG = `
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
-viewBox="0 0 24 24" fill="none" stroke="currentColor"
+<svg xmlns="http://www.w3.org/2000/svg"
+viewBox="0 0 24 24" width="32" height="32"
+fill="none" stroke="currentColor"
 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M12 20 V10"/>
-  <path d="M12 10 Q14 8 16 7"/>
-  <path d="M16 7 L14.5 7.5 L15.5 8.5"/>
+  <path d="M12 20 V9"/>
+  <path d="M12 9 Q12 7 14 6"/>
+  <path d="M14 6 L12.5 6.5 L13.5 7.5"/>
 </svg>`;
-
 const mergeSVG = `
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
-viewBox="0 0 24 24" fill="none" stroke="currentColor"
+<svg xmlns="http://www.w3.org/2000/svg"
+viewBox="0 0 24 24" width="32" height="32"
+fill="none" stroke="currentColor"
 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M7 20V12"/>
-  <path d="M17 20V12"/>
-  <path d="M7 12 C7 8, 12 8, 12 4"/>
-  <path d="M17 12 C17 8, 12 8, 12 4"/>
-  <path d="M12 4 L12 2"/>
-  <path d="M12 2 L10 4 M12 2 L14 4"/>
+  <path d="M9 20 V12"/>
+  <path d="M15 20 V12"/>
+  <path d="M9 12 Q12 8 12 5"/>
+  <path d="M15 12 Q12 8 12 5"/>
+  <path d="M12 5 L12 3"/>
+  <path d="M12 3 L10.5 4.5 M12 3 L13.5 4.5"/>
 </svg>`;
 const enterRoundaboutSVG = `
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -441,7 +442,7 @@ let lastInstructionIdx = 0;
     const lower = instr.text.toLowerCase();
 			
 if (lower.includes('roundabout') || lower.includes('circle')) {
-    svg.innerHTML = lower.includes('exit') ? exitRoundaboutSVG : enterRoundaboutSVG;
+    svg.innerHTML = lower.includes('enter') ? enterRoundaboutSVG : exitRoundaboutSVG;
 }
 else if (lower.includes('slight left') || lower.includes('keep left')) {
     svg.innerHTML = slightLeftSVG;
@@ -674,7 +675,7 @@ function showInstruction(idx) {
     const lower = instr.text.toLowerCase();
 	
     if (lower.includes('roundabout') || lower.includes('circle')) {
-    svg.innerHTML = lower.includes('exit') ? exitRoundaboutSVG : enterRoundaboutSVG;
+    svg.innerHTML = lower.includes('enter') ? enterRoundaboutSVG : exitRoundaboutSVG;
 }
 else if (lower.includes('slight left') || lower.includes('keep left')) {
     svg.innerHTML = slightLeftSVG;
