@@ -132,9 +132,6 @@
                 <div class="mb-4 bg-gray-50/80 p-3 rounded-2xl border border-gray-100">
                     <h3 id="dest-name" class="font-black text-gray-900 text-xl leading-tight truncate">Destination Road</h3>
                     <p id="dest-address" class="text-xs text-gray-500 font-semibold uppercase tracking-wider truncate">Locality, City</p>
-					<div class="mt-3">
-    					<img id="dest-image" class="w-full h-40 object-cover rounded-2xl hidden border border-gray-200">
-     				</div>
                 </div>
             </div>
 
@@ -331,14 +328,6 @@ function updateUserLocation(position) {
                 snapToRoad(rawDest[0], rawDest[1]),
                 getRoadDetails(rawDest[0], rawDest[1])
             ]);
-			const img = await getPlaceImage(rawDest[0], rawDest[1])
-			const imgEl = document.getElementById("dest-image");
-			if (img) {
-    			imgEl.src = img;
-    			imgEl.classList.remove("hidden");
-			} else {
-    			imgEl.classList.add("hidden");
-			}
             document.getElementById('dest-name').innerText = details.name;
             document.getElementById('dest-address').innerText = details.address;
 
@@ -401,36 +390,6 @@ document.getElementById('nav-hud').classList.remove('hidden');
     
     map.setZoom(18);
     showNotification("Guidance Started");
-}
-async function getPlaceImage(lat, lng) {
-    try {
-        // 1. reverse geocode with photon (you already use this)
-        const res = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`);
-        const data = await res.json();
-
-        const props = data.features?.[0]?.properties;
-        const wikidata = props?.wikidata;
-
-        if (!wikidata) return null;
-
-        // 2. get image from wikidata
-        const wdRes = await fetch(
-            `https://www.wikidata.org/wiki/Special:EntityData/${wikidata}.json`
-        );
-        const wdData = await wdRes.json();
-
-        const entity = wdData.entities[wikidata];
-        const claims = entity?.claims;
-
-        const imageName =
-            claims?.P18?.[0]?.mainsnak?.datavalue?.value;
-
-        if (!imageName) return null;
-
-        return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(imageName)}`;
-    } catch (e) {
-        return null;
-    }
 }
         function exitGuidanceLayout() {
             followMode = false;
