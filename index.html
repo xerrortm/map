@@ -266,7 +266,7 @@ const exitRoundaboutSVG = `
                 enableHighAccuracy: true, maximumAge: 0, timeout: 5000
             });
             followMode=false;
-			waitForGPSAndLoadSuggestions();
+			loadSuggestions();
         }
 
 function updateUserLocation(position) {
@@ -1022,14 +1022,6 @@ function goBackHome() {
     document.getElementById('search-input').value = '';
 
     if (userCoords) map.flyTo(userCoords, 16);
-}
-function waitForGPSAndLoadSuggestions() {
-    const waitForGPS = setInterval(() => {
-        if (userCoords) {
-            clearInterval(waitForGPS);
-            loadSuggestions();
-        }
-    }, 1000);
 }
 
 window.addEventListener('load', () => {
